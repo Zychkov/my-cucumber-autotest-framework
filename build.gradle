@@ -1,0 +1,109 @@
+plugins {
+    id "io.qameta.allure" version "2.8.1"
+    id 'java'
+}
+
+def allureVersion = '2.13.6'
+def cucumberVersion = '6.8.1'
+def junitVersion = '5.6.2'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+allure {
+    aspectjweaver = true
+    version = allureVersion
+}
+
+group 'ru.zychkov.test'
+version '1.0-SNAPSHOT'
+sourceCompatibility = 1.8
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.with {
+        encoding = 'UTF-8'
+    }
+}
+
+task cucumber() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = ['--plugin', 'pretty',   \
+                      '--plugin', 'io.qameta.allure.cucumber6jvm.AllureCucumber6Jvm',   \
+                      '--glue', 'autotests']
+        }
+    }
+}
+
+dependencies {
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter-api:5.6.2',
+            'io.cucumber:cucumber-java:6.8.1',
+            'io.rest-assured:rest-assured:4.3.2',
+            'io.rest-assured:json-path:4.3.2'
+    )
+    testRuntimeOnly(
+            'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+    )
+
+    compile group: 'com.codeborne', name: 'selenide', version: '5.15.1'
+    compile group: 'io.qameta.allure', name: 'allure-cucumber6-jvm', version: allureVersion
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.3'
+    compile group: 'ru.yandex.qatools.properties', name: 'properties', version: '1.6'
+    compile group: 'ru.yandex.qatools.properties', name: 'properties-loader', version: '1.6'
+    compile group: 'io.github.prashant-ramcharan', name: 'courgette-jvm', version: '5.4.0'
+
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter', version: junitVersion
+    testCompile group: 'org.junit.platform', name: 'junit-platform-surefire-provider', version: '1.3.2'
+    testCompile group: 'org.junit.vintage', name: 'junit-vintage-engine', version: junitVersion
+    testCompile group: 'org.assertj', name: 'assertj-core', version: '3.17.1'
+    testCompile group: 'io.cucumber', name: 'cucumber-junit', version: cucumberVersion
+    testCompile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.3'
+}
+
+tasks.withType(Test) {
+    systemProperties = System.getProperties()
+    systemProperties.remove("java.endorsed.dirs")
+}
+
+test {
+    useJUnitPlatform()
+
+    systemProperty "cucumber.options", System.getProperty("cucumber.options")
+
+    if (project.hasProperty("hostName")) {
+        systemProperty "hostName", findProperty("hostName")
+    }
+
+    if (project.hasProperty("portalUserLogin")) {
+        systemProperty "portalUserLogin", findProperty("portalUserLogin")
+    }
+
+    if (project.hasProperty("portalUserPassword")) {
+        systemProperty "portalUserPassword", findProperty("portalUserPassword")
+    }
+
+    if (project.hasProperty("selenoidBrowser")) {
+        systemProperty "selenoidBrowser", findProperty("selenoidBrowser")
+    }
+
+    if (project.hasProperty("selenoidHost")) {
+        systemProperty "selenoidHost", findProperty("selenoidHost")
+    }
+
+    if (project.hasProperty("browser")) {
+        systemProperty "browser", findProperty("browser")
+    }
+}

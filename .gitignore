@@ -10,6 +10,22 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
+# Binaries
+*.exe
+**/.gradle
+**/.allure
+**/target
+**/build
+**/bin
+
+# Folders to ignore
+.git
+.hg
+.svn
+.CVS
+.idea
+bundles
+
 # Package Files #
 *.jar
 *.war
